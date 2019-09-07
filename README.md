@@ -1,2 +1,2 @@
 # MNAR-spline
-Bayesian Semiparametric estimation with nonigrnoable nonresponse
+Sugasawa, Morikawa and Takahata (2019). Bayesian Semiparametric estimation with nonigrnoable nonresponse. arXiv

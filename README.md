@@ -4,10 +4,10 @@ This package implements Bayesian semiparametric estimaton for response models, a
 
 Sugasawa, S., Morikawa, K. and Takahata, K. (2019). Bayesian semiparametric estimaton with nonignorable nonresponse. arXiv
 
-Functions are implemented in MNAR-function.R available in the repository.
+Functions are implemented in BSS-function.R available in the repository.
 
 ```{r}
-source("MNAR-function.R")   # require "MCMCpack" and "pgdraw" packages
+source("BSS-function.R")   # require "MCMCpack" and "pgdraw" packages
 ```
 
 Load demo dataset
@@ -19,7 +19,7 @@ Fit the semiparametric reponse model
 
 Input of `MNAR`
 
-- `Y`: response vector (missing part is `NA`)
+- `oby`: response vector (missing part is `NA`)
 - `X`: matrix of covariates (the first column should be 1's) in the outcome model
 - `Z`: matrix of covariates in the response model
 - `S`: vector of missing indicator (1 for observed; 0 for missing )
@@ -29,8 +29,17 @@ Input of `MNAR`
 - `burn`: burn-in period
 - `Knot`: locations of knots are adaptively esimated if `T`
 
-Output of `MNAR`
+Output of `MNAR`: List object of MCMC results
 
+- `Beta`: regression coeffieicnts in the outcome model
+- `Sigma`: squared value of error variance in the outcome model
+- ``: matrix of covariates in the response model
+- `S`: vector of missing indicator (1 for observed; 0 for missing )
+- `q`: order of spline 
+- `K`: number of knots
+- `mc`: length of MCMC 
+- `burn`: burn-in period
+- `Knot`: locations of knots are adaptively esimated if `T`
 
 ```{r}
 

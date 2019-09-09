@@ -2,7 +2,7 @@
 
 This package implements Bayesian semiparametric estimaton for response models, as proposed by the following papers.
 
-Sugasawa, S., Morikawa, K. and Takahata, K. (2019). Bayesian semiparametric estimaton with nonignorable nonresponse. arXiv
+Sugasawa, S., Morikawa, K. and Takahata, K. (2019). Bayesian semiparametric estimaton with nonignorable nonresponse. https://arxiv.org/abs/1909.02878
 
 Functions are implemented in BSS-function.R available in the repository.
 
@@ -82,5 +82,5 @@ plot(yy,apply(Mis,2,mean),type="l",lty=1,ylab="Probability",xlab="Response value
 polygon(c(yy,rev(yy)),c(CI[1,],rev(CI[2,])),col="#30303020",border=NA)
 ```
 
-https://github.com/sshonosuke/MNAR-spline/files/3588257/Rplot.pdf
+
 

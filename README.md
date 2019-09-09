@@ -191,10 +191,11 @@ for(k in 1:L){
   Mis.t[,k]=logit( as.vector(fit$Phi%*%YY)+as.vector(fit$Gamma%*%SP)+add.t )
 }
 
-ran=range(CI1,CI2)
 est.Mis=cbind(apply(Mis.c,2,mean),apply(Mis.t,2,mean))
 CI1=apply(Mis.c,2,quant)
 CI2=apply(Mis.t,2,quant)
+
+ran=range(CI1,CI2)
 matplot(yy,est.Mis,type="l",lty=1,main=paste0("Response model (S=",SS,")"),ylab="Probability",xlab="PANSS score",ylim=ran)
 polygon(c(yy,rev(yy)),c(CI1[1,],rev(CI1[2,])),col="#30303020",border=NA)
 polygon(c(yy,rev(yy)),c(CI2[1,],rev(CI2[2,])),col="#ff000020",border=NA)

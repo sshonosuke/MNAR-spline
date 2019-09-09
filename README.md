@@ -145,23 +145,60 @@ bn=2000
 fit=BSS.LMM(obY,X,Z,S,ID,mc=mc,burn=bn,q=qq,K=K)
 ```
 
-Results: time varying PANSS scores for two groups
+Time varying PANSS scores for two groups
 ```{r}
 tt=c(1,2,4,6,8)
 XX=cbind(1,tt,tt^2,tt^3)
 
 pos1=XX%*%t(fit$Beta[,1:4])
 pm1=apply(pos1,1,mean)
-CI1=apply(pos1,1,CI)
+CI1=apply(pos1,1,quant)
 pos2=pos1+XX%*%t(fit$Beta[,5:8])
 pm2=apply(pos2,1,mean)
-CI2=apply(pos2,1,CI)
+CI2=apply(pos2,1,quant)
+
+ran=range(CI1,CI2)
 matplot(tt,cbind(pm1,pm2),type="l",col=c(1,2),lty=1,ylim=ran,main="Semiparametric selection",ylab="PANSS score",xlab="Time (week)")
 points(tt,pm1,col=1,pch=8)
 points(tt,pm2,col=2,pch=8)
 polygon(c(tt,rev(tt)),c(CI1[1,],rev(CI1[2,])),col="#30303020",border=NA)
 polygon(c(tt,rev(tt)),c(CI2[1,],rev(CI2[2,])),col="#ff000020",border=NA)
 legend("topright",c("control","treatment"),col=c(1,2),lty=1)
+```
+
+Estimated response model and 95% point-wise credible intervals
+```{r}
+aa=mean(fit$a)
+kappa=quantile(na.omit(obY),prob=c(0.05,0.95))
+kappa1=kappa[1]-aa*diff(kappa)/2
+kappa2=kappa[2]+aa*diff(kappa)/2
+knots=seq(kappa1,kappa2,length=K)
+
+nn=mc-bn
+L=100
+eval.time=4
+SS=1     # set 1 or 0 
+if(SS==0){ yy=seq(-30,20,length=L) }
+if(SS==1){ yy=seq(-40,20,length=L) }
+add.c=as.vector(fit$Delta%*%c(eval.time,SS,0))
+add.t=as.vector(fit$Delta%*%c(eval.time,SS,1))
+
+Mis.c=matrix(NA,nn,L); Mis.t=matrix(NA,nn,L)
+for(k in 1:L){
+  YY=yy[k]^(0:qq)
+  SP=( (yy[k]-knots)*ifelse(yy[k]-knots>0,1,0) )^qq  
+  Mis.c[,k]=logit( as.vector(fit$Phi%*%YY)+as.vector(fit$Gamma%*%SP)+add.c )
+  Mis.t[,k]=logit( as.vector(fit$Phi%*%YY)+as.vector(fit$Gamma%*%SP)+add.t )
+}
+
+ran=range(CI1,CI2)
+est.Mis=cbind(apply(Mis.c,2,mean),apply(Mis.t,2,mean))
+CI1=apply(Mis.c,2,quant)
+CI2=apply(Mis.t,2,quant)
+matplot(yy,est.Mis,type="l",lty=1,main=paste0("Response model (S=",SS,")"),ylab="Probability",xlab="PANSS score",ylim=ran)
+polygon(c(yy,rev(yy)),c(CI1[1,],rev(CI1[2,])),col="#30303020",border=NA)
+polygon(c(yy,rev(yy)),c(CI2[1,],rev(CI2[2,])),col="#ff000020",border=NA)
+legend("bottomleft",c("Control","Treatment"),col=1:2,lty=1) 
 ```
 
 

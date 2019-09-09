@@ -82,5 +82,5 @@ plot(yy,apply(Mis,2,mean),type="l",lty=1,ylab="Probability",xlab="Response value
 polygon(c(yy,rev(yy)),c(CI[1,],rev(CI[2,])),col="#30303020",border=NA)
 ```
 
-
+https://github.com/sshonosuke/MNAR-spline/files/3588257/Rplot.pdf
 

@@ -53,5 +53,34 @@ Posterior mean of regression coeffieicnts
 apply(fit$Beta,2,mean)
 ```
 
+Estimated response model and 95% point-wise credible intervals
+```{r}
+aa=mean(fit$a)  
+kappa=quantile(na.omit(Y),prob=c(0.05,0.95))
+kappa1=kappa[1]-aa*diff(kappa)/2
+kappa2=kappa[2]+aa*diff(kappa)/2
+knots=seq(kappa1,kappa2,length=K)
+
+nn=mc-bn      # number of posterior samples
+L=100     # number of evalaution points for response values
+ran=range(na.omit(Y))
+yy=seq(ran[1],ran[2],length=L)
+zz=1     # evaluation point of covariate
+add=as.vector(fit$Delta*zz)
+logit=function(x){ 1/(1+exp(-x)) }
+
+Mis=matrix(NA,nn,L)
+for(k in 1:L){
+  YY=yy[k]^(0:qq)
+  SP=( (yy[k]-knots)*ifelse(yy[k]-knots>0,1,0) )^2  
+  Mis[,k]=logit( as.vector(fit$Phi%*%YY)+as.vector(fit$Gamma%*%SP)+add )
+}
+
+quant=function(x){ quantile(x,prob=c(0.025,0.975)) }
+CI=apply(Mis,2,quant)     # point-wise credible intervals
+plot(yy,apply(Mis,2,mean),type="l",lty=1,ylab="Probability",xlab="Response value",main="Response model",ylim=range(CI))
+polygon(c(yy,rev(yy)),c(CI[1,],rev(CI[2,])),col="#30303020",border=NA)
+```
+
 
 

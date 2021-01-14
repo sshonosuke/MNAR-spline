@@ -1,8 +1,8 @@
-# MNAR-spline (Bayesian semiparametric estimaton with nonignorable nonresponse)
+# MNAR-spline (Bayesian semiparametric mdoeling of response mechanism for nonignorable missing data)
 
-This package implements Bayesian semiparametric estimaton for response models, as proposed by the following papers.
+This package implements Bayesian semiparametric modeling of response models, as proposed by the following papers.
 
-Sugasawa, S., Morikawa, K. and Takahata, K. (2019). Bayesian semiparametric estimaton with nonignorable nonresponse. https://arxiv.org/abs/1909.02878
+Sugasawa, S., Morikawa, K. and Takahata, K. (2019). Bayesian semiparametric mdoeling of response mechanism for nonignorable missing data. https://arxiv.org/abs/1909.02878
 
 Functions are implemented in BSS-function.R available in the repository.
 

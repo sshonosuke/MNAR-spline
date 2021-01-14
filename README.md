@@ -1,4 +1,4 @@
-# MNAR-spline (Bayesian semiparametric mdoeling of response mechanism for nonignorable missing data)
+# MNAR-spline (Bayesian semiparametric modeling of response mechanism for nonignorable missing data)
 
 This repository provides R code implementing Bayesian semiparametric modeling of response models, as proposed by the following papers.
 

@@ -115,12 +115,13 @@ SR.LMM <- function(oby, X, Z, S, ID, q=2, K=10, mc=5000, burn=2000, Knot=T, gam.
     Beta.pos[k,] <- Beta
     
     # Sig
-    Mu <- as.vector(X%*%Beta+RE[ID])
-    resid <- YY-Mu
-    Sig <- sqrt( rinvgamma(1, ccg+n/2, ccg+sum(resid^2)/2) )
+    Mu <- as.vector(X%*%Beta)
+    resid <- YY-Mu-RE[ID]
+    Sig <- sqrt(rinvgamma(1,ccg+n/2,ccg+sum(resid^2)/2))
     Sig.pos[k] <- Sig
-   
-     # RE
+    
+    # RE
+    resid <- YY-Mu
     m1 <- TT*Tau^2/(Sig^2+TT*Tau^2)*apply(matrix(resid, TT, m), 2, mean)
     m2 <- Sig^2*Tau^2/(Sig^2+TT*Tau^2)
     RE <- rnorm(m, m1, sqrt(m2))

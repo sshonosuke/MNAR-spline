@@ -198,37 +198,50 @@ SR.LMM <- function(oby, X, Z, S, ID, q=2, K=10, mc=5000, burn=2000, Knot=T, gam.
   a.pos <- a.pos[-omit]
   Pi.pos <- Pi.pos[-omit,]
   
-  ## DIC
+  # complete DIC
   hBeta <- apply(Beta.pos, 2, mean)
   hsig <- mean(Sig.pos)
-  hY <- apply(Y.pos, 2, mean)
   hPhi <- apply(Phi.pos, 2, mean)
   hDelta <- apply(Delta.pos, 2, mean)
   hGam <- apply(Gam.pos, 2, mean)
   ha <- mean(a.pos)
   knots <- Set.Knots(ha)
   Zreg <- as.vector(Z%*%hDelta)
-  hPi <- logistic( as.vector( SPterm(hY, knots)%*%c(hPhi,hGam) + Zreg ) )
-  ep <- 10^(-5)
-  hPi[hPi<ep] <- ep
-  hPi[hPi>1-ep] <- 1-ep
+  ep <- 10^(-10)
   Pi.pos[Pi.pos<ep] <- ep
   Pi.pos[Pi.pos>1-ep] <- 1-ep
   
-  hY <- apply(Y.pos, 2, mean)
-  mu.pos <- Beta.pos%*%t(X) + RE.pos[,ID]
+  mu.pos <- Beta.pos%*%t(X) 
   hmu <- apply(mu.pos, 2, mean)
   hsig <- mean(Sig.pos)
+  htau <- mean(Tau.pos)
   
-  D1 <- -2*( dnorm(Y.pos, mu.pos, Sig.pos, log=T) + t(t(log(Pi.pos))*S) + t(t(log(1-Pi.pos))*(1-S)) )
-  D1 <- apply(na.omit(D1), 2, mean)
-  D2 <- -2*( dnorm(hY, hmu, hsig, log=T) + log(hPi)*S + log(1-hPi)*(1-S) )
-  DIC <- sum(2*D1 - D2)
+  D1 <- -2*( dnorm(Y.pos, mu.pos+RE.pos[,ID], Sig.pos, log=T) + t(t(log(Pi.pos))*S) + t(t(log(1-Pi.pos))*(1-S)) )
+  D1 <- apply(D1, 2, mean)
+  D12 <- -2*dnorm(RE.pos, 0, Tau.pos, log=T)
+  D12 <- apply(D12, 2, mean)
+  mc2 <- mc-burn
+  Pi2.pos <- matrix(NA, n, mc2)
+  for(k in 1:mc2){
+    Pi2.pos[,k] <- logistic( as.vector( SPterm(Y.pos[k,], knots)%*%c(hPhi,hGam) + Zreg ) )
+  }
+  Pi2.pos[Pi2.pos<ep] <- ep
+  Pi2.pos[Pi2.pos>1-ep] <- 1-ep
+  D2 <- -2*( dnorm(t(Y.pos), hmu+t(RE.pos[,ID]), hsig, log=T) + log(Pi2.pos)*S + log(1-Pi2.pos)*(1-S) )
+  D2 <- apply(D2, 1, mean)
+  D22 <- -2*dnorm(RE.pos, 0, htau, log=T)
+  D22 <- apply(D22, 2, mean)
+  DIC <- sum(2*D1) + sum(2*D12) - sum(D2) - sum(D22)
   
+  # Result
   Result <- list(Beta=Beta.pos, Sig=Sig.pos, RE=RE.pos, Tau=Tau.pos, Y=Y.pos, 
                  Phi=Phi.pos, Delta=Delta.pos, Gam=Gam.pos, a=a.pos, DIC=DIC) 
   return(Result)
 }
+
+
+
+
 
 
 
@@ -329,22 +342,29 @@ LR.LMM <- function(oby, X, Z, S, ID, mc=5000, burn=2000){
   Phi.pos <- Phi.pos[-omit,]
   Delta.pos <- Delta.pos[-omit,]
   
-  # DIC
+  # complete DIC
   logistic <- function(x){ 1/(1+exp(-x)) }
   hPhi <- apply(Phi.pos, 2, mean)
   hDelta <- apply(Delta.pos, 2, mean)
-  mu.pos <- Beta.pos%*%t(X) + RE.pos[,ID]
+  mu.pos <- Beta.pos%*%t(X) 
   hmu <- apply(mu.pos, 2, mean)
   hsig <- mean(Sig.pos)
-  hY <- apply(Y.pos, 2, mean)
+  htau <- mean(Tau.pos)
+  
   PP.pos <- logistic( Phi.pos[,1] + Phi.pos[,2]*Y.pos + as.matrix(Delta.pos)%*%t(Z) )
-  hPP <- as.vector(logistic( hPhi[1] + hPhi[2]*hY + Z%*%hDelta ))
   
-  D1 <- -2*( dnorm(Y.pos, mu.pos, Sig.pos, log=T) + t(t(log(PP.pos))*S) + t(t(log(1-PP.pos))*(1-S)) )
+  D1 <- -2*( dnorm(Y.pos, mu.pos+RE.pos[,ID], Sig.pos, log=T) + t(t(log(PP.pos))*S) + t(t(log(1-PP.pos))*(1-S)) )
   D1 <- apply(D1, 2, mean)
-  D2 <- -2*( dnorm(hY, hmu, hsig, log=T) + log(hPP)*S + log(1-hPP)*(1-S) )
-  DIC <- sum(2*D1 - D2)
+  D12 <- -2*dnorm(RE.pos, 0, Tau.pos, log=T)
+  D12 <- apply(D12, 2, mean)
+  PP2.pos <- logistic( hPhi[1] + hPhi[2]*t(Y.pos) + as.vector(Z%*%hDelta) )
+  D2 <- -2*( dnorm(t(Y.pos), hmu+t(RE.pos[,ID]), hsig, log=T) + log(PP2.pos)*S + log(1-PP2.pos)*(1-S) )
+  D2 <- apply(D2, 1, mean)
+  D22 <- -2*dnorm(RE.pos, 0, htau, log=T)
+  D22 <- apply(D22, 2, mean)
+  DIC <- sum(2*D1) + sum(2*D12) - sum(D2) - sum(D22)
   
+  # Result 
   Result <- list(Beta=Beta.pos, Sig=Sig.pos, RE=RE.pos, Tau=Tau.pos, Y=Y.pos, Phi=Phi.pos, Delta=Delta.pos, DIC=DIC) 
   return(Result)
 }

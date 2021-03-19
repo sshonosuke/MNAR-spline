@@ -190,6 +190,7 @@ SR.LM <- function(obY, X, Z, S, q=2, K=10, mc=5000, burn=2000, Knot=T, NP=T){
     }
   }
   
+  ## Summary
   om <- 1:burn
   Beta.pos <- Beta.pos[-om,]
   Sig.pos <- Sig.pos[-om]
@@ -201,7 +202,7 @@ SR.LM <- function(obY, X, Z, S, q=2, K=10, mc=5000, burn=2000, Knot=T, NP=T){
   Pi.pos <- Pi.pos[-om,]
   if(NP){ Xi.pos <- Xi.pos[-om,] }
   
-  ## DIC
+  # complete DIC
   hBeta <- apply(Beta.pos, 2, mean)
   hsig <- mean(Sig.pos)
   hY <- apply(Y.pos, 2, mean)
@@ -220,7 +221,7 @@ SR.LM <- function(obY, X, Z, S, q=2, K=10, mc=5000, burn=2000, Knot=T, NP=T){
   ep <- 10^(-10)
   hPi[hPi<ep] <- ep
   hPi[hPi>1-ep] <- 1-ep
-
+  
   hY <- apply(Y.pos, 2, mean)
   mu.pos <- Beta.pos%*%t(X)
   hmu <- apply(mu.pos, 2, mean)
@@ -228,7 +229,15 @@ SR.LM <- function(obY, X, Z, S, q=2, K=10, mc=5000, burn=2000, Knot=T, NP=T){
   
   D1 <- -2*( dnorm(Y.pos, mu.pos, Sig.pos, log=T) + t(t(log(Pi.pos))*S) + t(t(log(1-Pi.pos))*(1-S)) )
   D1 <- apply(na.omit(D1), 2, mean)
-  D2 <- -2*( dnorm(hY, hmu, hsig, log=T) + log(hPi)*S + log(1-hPi)*(1-S) )
+  mc2 <- mc-burn
+  Pi2.pos <- matrix(NA, n, mc2)
+  for(k in 1:mc2){
+    Pi2.pos[,k] <- logistic( as.vector( SPterm(Y.pos[k,], knots)%*%c(hPhi,hGam) + Zreg + RB ) )
+  }
+  Pi2.pos[Pi2.pos<ep] <- ep
+  Pi2.pos[Pi2.pos>1-ep] <- 1-ep
+  D2 <- -2*( dnorm(t(Y.pos), hmu, hsig, log=T) + log(Pi2.pos)*S + log(1-Pi2.pos)*(1-S) )
+  D2 <- apply(D2, 1, mean)
   DIC <- sum(2*D1 - D2)
   
   ## summary 
@@ -304,13 +313,14 @@ LR.LM <- function(obY, X, Z, S, mc=5000, burn=2000){
     Phi <- mvrnorm(1,as.vector(A%*%mm),A)
     Phi.pos[k,] <- Phi
     # Delta
-    A=solve(t(Z)%*%diag(Om)%*%Z+ccn*diag(rr))
+    A <- solve(t(Z)%*%diag(Om)%*%Z+ccn*diag(rr))
     mm <- t(Z)%*%((S-0.5)-diag(Om)%*%PP%*%Phi)
     Delta <- mvrnorm(1,as.vector(A%*%mm),A)
     Delta.pos[k,] <- Delta
     reg <- as.vector(Z%*%Delta)
   }
   
+  ## Summary
   om <- 1:burn
   Beta.pos <- Beta.pos[-om,]
   Sig.pos <- Sig.pos[-om]
@@ -318,7 +328,7 @@ LR.LM <- function(obY, X, Z, S, mc=5000, burn=2000){
   Phi.pos <- Phi.pos[-om,]
   Delta.pos <- as.matrix(Delta.pos[-om,])
   
-  # DIC
+  # complete DIC
   hPhi <- apply(Phi.pos, 2, mean)
   hDelta <- apply(Delta.pos, 2, mean)
   mu.pos <- Beta.pos%*%t(X)
